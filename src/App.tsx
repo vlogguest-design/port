@@ -308,9 +308,9 @@ export default function App() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [profileImg, setProfileImg] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('portfolio_david_photo') || '/profile.jpg';
+      return localStorage.getItem('portfolio_david_photo') || '/iprofile.jpg';
     }
-    return '/profile.jpg';
+    return '/iprofile.jpg';
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -406,8 +406,8 @@ export default function App() {
                 onError={(e) => {
                   const target = e.currentTarget;
                   const currentSrc = target.src;
-                  if (!currentSrc.includes('david_portrait_1791248919043.jpg')) {
-                    target.src = "/src/assets/images/david_portrait_1791248919043.jpg";
+                  if (!currentSrc.includes('iprofile.jpg')) {
+                    target.src = "/src/assets/images/iprofile.jpg";
                   }
                 }}
               />
