@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, useRef, ReactNode, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Mail, 
@@ -22,7 +22,8 @@ import {
   User,
   Cpu,
   Home,
-  Laptop
+  Laptop,
+  Camera
 } from 'lucide-react';
 
 // --- Types ---
@@ -264,7 +265,7 @@ const MobileMenu = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boo
                     <a href="https://www.linkedin.com/in/chibuike-david-77778311b" target="_blank" rel="noopener noreferrer" className="aspect-square rounded-2xl bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-blue-600 transition-all border border-white/5">
                       <Linkedin className="w-6 h-6" />
                     </a>
-                    <a href="https://wa.me/message/ALPYBUWE643IB1" target="_blank" rel="noopener noreferrer" className="aspect-square rounded-2xl bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-green-600 transition-all border border-white/5">
+                    <a href="https://wa.me/2347083991476" target="_blank" rel="noopener noreferrer" className="aspect-square rounded-2xl bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-green-600 transition-all border border-white/5">
                       <MessageCircle className="w-6 h-6" />
                     </a>
                   </div>
@@ -305,6 +306,35 @@ export default function App() {
   const [typedText, setTypedText] = useState("");
   const [roleIndex, setRoleIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [profileImg, setProfileImg] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('portfolio_david_photo') || '/profile.jpg';
+    }
+    return '/profile.jpg';
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      setProfileImg(base64);
+      try {
+        localStorage.setItem('portfolio_david_photo', base64);
+        await fetch('/api/upload-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64 }),
+        });
+      } catch (err) {
+        console.error('Error saving uploaded photo:', err);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const roles = [
     "Software Engineer.",
     "Full Stack Developer.",
@@ -366,26 +396,40 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.5 }}
-              className="relative w-full max-w-[92%] md:max-w-4xl aspect-[1/1] mx-auto mb-20 rounded-[4.5rem] md:rounded-[7.5rem] overflow-hidden border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.6)] bg-zinc-900/50"
+              className="relative w-full max-w-[92%] md:max-w-4xl aspect-[1/1] mx-auto mb-20 rounded-[4.5rem] md:rounded-[7.5rem] overflow-hidden border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.6)] bg-zinc-900/50 group"
             >
               <img 
-                src="/input_file_2.png" 
-                alt="David - Full Stack Developer"
-                className="w-full h-full object-cover"
+                src={profileImg} 
+                alt="David - UI/UX Architect & Software Engineer"
+                className="w-full h-full object-cover object-center"
                 referrerPolicy="no-referrer"
                 onError={(e) => {
                   const target = e.currentTarget;
                   const currentSrc = target.src;
-                  if (currentSrc.includes('input_file_2.png')) {
-                    target.src = "/input_file_1.png";
-                  } else if (currentSrc.includes('input_file_1.png')) {
-                    target.src = "/input_file_0.png";
-                  } else {
-                    target.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=1600";
+                  if (!currentSrc.includes('david_portrait_1791248919043.jpg')) {
+                    target.src = "/src/assets/images/david_portrait_1791248919043.jpg";
                   }
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 pointer-events-none" />
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handlePhotoUpload}
+                accept="image/*"
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute bottom-6 right-6 md:bottom-10 md:right-10 px-5 py-3 rounded-2xl bg-zinc-900/80 hover:bg-zinc-800 text-white/90 text-sm font-medium backdrop-blur-md border border-white/20 shadow-xl flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                title="Update portrait photo"
+              >
+                <Camera className="w-4 h-4 text-indigo-400" />
+                <span>Update Photo</span>
+              </button>
             </motion.div>
             
             <motion.div 
@@ -401,7 +445,7 @@ export default function App() {
                 {[
                   { icon: <Github className="w-8 h-8 fill-current" strokeWidth={3} />, href: "https://github.com/vlogguest-design", color: "hover:bg-zinc-800", label: "GitHub" },
                   { icon: <Linkedin className="w-8 h-8 fill-current" strokeWidth={3} />, href: "https://www.linkedin.com/in/chibuike-david-77778311b?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app", color: "hover:bg-blue-600", label: "LinkedIn" },
-                  { icon: <MessageCircle className="w-8 h-8 fill-current" strokeWidth={3} />, href: "https://wa.me/message/ALPYBUWE643IB1", color: "hover:bg-green-600", label: "WhatsApp" },
+                  { icon: <MessageCircle className="w-8 h-8 fill-current" strokeWidth={3} />, href: "https://wa.me/2347083991476", color: "hover:bg-green-600", label: "WhatsApp" },
                 ].map((social, i) => (
                   <motion.a 
                     key={i}
@@ -606,14 +650,14 @@ export default function App() {
           </h2>
           
           <div className="flex flex-col md:flex-row gap-8 justify-center items-center mb-24">
-            <a href="https://wa.me/message/ALPYBUWE643IB1" target="_blank" className="flex items-center gap-6 bg-white/5 p-6 pr-12 rounded-[2rem] hover:bg-green-600 transition-all group">
+            <a href="https://wa.me/2347083991476" target="_blank" className="flex items-center gap-6 bg-white/5 p-6 pr-12 rounded-[2rem] hover:bg-green-600 transition-all group">
               <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center">
                 <MessageCircle className="w-8 h-8" />
               </div>
               <div className="text-left">
                 <div className="text-xl font-bold whitespace-nowrap">
                   <span className="text-xs text-zinc-400 font-bold uppercase tracking-widest mr-2">WhatsApp:</span>
-                  08156030901
+                  07083991476
                 </div>
               </div>
             </a>
@@ -643,7 +687,7 @@ export default function App() {
                <a href="https://www.linkedin.com/in/chibuike-david-77778311b?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
                  <Linkedin className="w-5 h-5 fill-current" />
                </a>
-               <a href="https://wa.me/message/ALPYBUWE643IB1" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
+               <a href="https://wa.me/2347083991476" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/10 transition-all">
                  <MessageCircle className="w-5 h-5 fill-current" />
                </a>
             </div>
